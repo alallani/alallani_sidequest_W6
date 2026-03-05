@@ -1,16 +1,16 @@
 {
   "player": {
-    "frameW": 48,
-    "frameH": 48,
+    "frameW": 32,
+    "frameH": 32,
 
     "collider": {
-      "w": 18,
-      "h": 30
+      "w": 12,
+      "h": 20
     },
 
     "anisOffset": {
       "x": 0,
-      "y": -9
+      "y": -6
     },
 
     "move": {

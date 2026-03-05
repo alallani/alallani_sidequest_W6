@@ -31,7 +31,11 @@ async function fetchJSON(url) {
   const trimmed = text.trim();
 
   // If a server returns index.html / 404 HTML, JSON.parse would throw a confusing error.
-  if (trimmed.startsWith("<") || trimmed.startsWith("<!doctype") || trimmed.startsWith("<html")) {
+  if (
+    trimmed.startsWith("<") ||
+    trimmed.startsWith("<!doctype") ||
+    trimmed.startsWith("<html")
+  ) {
     throw new Error(`Expected JSON but got HTML from ${url}`);
   }
 
@@ -90,7 +94,8 @@ export class LevelLoader {
 
     // --- Tilemap ---
     const tilemap = Array.isArray(level.tilemap) ? level.tilemap : [];
-    if (tilemap.length === 0) throw new Error(`Level "${level.id}" missing "tilemap" array`);
+    if (tilemap.length === 0)
+      throw new Error(`Level "${level.id}" missing "tilemap" array`);
 
     const cols = tilemap[0].length;
     const rows = tilemap.length;
@@ -103,7 +108,8 @@ export class LevelLoader {
     //   level.world.gravity / fallResetMarginTiles / winScore
     // Falls back to legacy:
     //   level.gravity / level.fallResetMarginTiles / level.winScore
-    const worldSrc = level.world && typeof level.world === "object" ? level.world : level;
+    const worldSrc =
+      level.world && typeof level.world === "object" ? level.world : level;
 
     const world = {
       gravity: Number(worldSrc.gravity ?? 10),
@@ -123,7 +129,8 @@ export class LevelLoader {
       cameraLerp: Number(doc.cameraLerp ?? 0.1),
     };
 
-    const levelView = level.view && typeof level.view === "object" ? level.view : {};
+    const levelView =
+      level.view && typeof level.view === "object" ? level.view : {};
 
     const view = {
       ...docView,
@@ -131,10 +138,14 @@ export class LevelLoader {
     };
 
     // --- Optional rules flags (invincible levels etc.) ---
-    const rules = level.rules && typeof level.rules === "object" ? level.rules : {};
+    const rules =
+      level.rules && typeof level.rules === "object" ? level.rules : {};
 
     // --- Merge tuning overrides (level.overrides) into global tuning ---
-    const overrides = level.overrides && typeof level.overrides === "object" ? level.overrides : null;
+    const overrides =
+      level.overrides && typeof level.overrides === "object"
+        ? level.overrides
+        : null;
     const tuning = LevelLoader.deepMerge(this.globalTuning, overrides);
 
     // Package returned to Game/Level
