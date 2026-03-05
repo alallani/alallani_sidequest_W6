@@ -1,68 +1,72 @@
 // src/world/TileBuilder.js
 // Tile + static group construction (WORLD helper).
 //
-// Responsibilities:
-// - Create static groups for tile characters (g/d/L/R/[ ])
-// - Create collectable/danger groups (leaf/fire)
-// - Create boar group placeholder BEFORE Tiles() so 'b' spawns into it
-// - Spawn everything from the level.tilemap via new Tiles(...)
-// - Apply collider/sensor settings for leaf + fire
+// Collectible: key (replaces leaf).
+//   keySpriteSheet.png: 768x32px, 24 frames at 32x32px, single row.
 //
-// Non-goals:
-// - Does NOT control camera, parallax, or HUD
-// - Does NOT implement boar AI (BoarSystem does)
+// SIZE FIX: Setting w/h on the group before Tiles() is unreliable — p5play
+// resets each spawned sprite's size to match the animation frame dimensions.
+// Solution (same pattern as scorpion scale): set sprite.scale = KEY_SCALE
+// on each sprite AFTER Tiles() has spawned them. Scale affects only the
+// visual render; the (already-removed) collider is unaffected.
 
 import { buildBoarGroup } from "./BoarSystem.js";
 
+const KEY_SCALE = 0.4; // 32px source * 0.4 = ~13px rendered
+// Adjust this one value to resize all keys.
+
 export function buildTilesAndGroups(level) {
   // ---------------------------------------------------------------------------
-  // 1) Validate the data contract from levels.json
+  // 1) Validate data contract
   // ---------------------------------------------------------------------------
-
   const tilemap = level.levelData?.tilemap;
   if (!Array.isArray(tilemap) || tilemap.length === 0) {
-    throw new Error(`[TileBuilder] level.levelData.tilemap is missing or empty.`);
+    throw new Error(
+      `[TileBuilder] level.levelData.tilemap is missing or empty.`,
+    );
   }
 
   const tiles = level.levelData?.tiles;
   if (!tiles || typeof tiles !== "object") {
-    throw new Error(`[TileBuilder] levels.json is missing level.tiles { tileW, tileH, frameW, frameH }.`);
+    throw new Error(
+      `[TileBuilder] levels.json is missing level.tiles { tileW, tileH, frameW, frameH }.`,
+    );
   }
 
   const tileW = Number(tiles.tileW);
   const tileH = Number(tiles.tileH);
 
   if (!Number.isFinite(tileW) || tileW <= 0) {
-    throw new Error(`[TileBuilder] Invalid tiles.tileW in levels.json: ${tiles.tileW}`);
+    throw new Error(`[TileBuilder] Invalid tiles.tileW: ${tiles.tileW}`);
   }
   if (!Number.isFinite(tileH) || tileH <= 0) {
-    throw new Error(`[TileBuilder] Invalid tiles.tileH in levels.json: ${tiles.tileH}`);
+    throw new Error(`[TileBuilder] Invalid tiles.tileH: ${tiles.tileH}`);
   }
 
-  // Save for anyone who wants them later (debug/UI/etc.)
   level._tileW = tileW;
   level._tileH = tileH;
 
   // ---------------------------------------------------------------------------
-  // 2) Build groups (IMPORTANT: set w/h on groups BEFORE new Tiles(...))
+  // 2) Build groups (BEFORE new Tiles())
   // ---------------------------------------------------------------------------
 
-  // --- boar group (spawn from 'b') ---
-  // Must exist BEFORE Tiles() runs so 'b' characters spawn into this group.
+  // --- scorpion group (tile = 'b') ---
   buildBoarGroup(level);
 
-  // --- leaf group (spawn from 'x') ---
+  // --- key group (tile = 'x') — replaces leaf ---
+  // w/h intentionally NOT set here — Tiles() would override them anyway.
+  // Scale is applied per-sprite after Tiles() below.
   level.leaf = new Group();
   level.leaf.physics = "static";
-  level.leaf.spriteSheet = level.assets.leafImg;
-  level.leaf.addAnis({ idle: { w: 32, h: 32, row: 0, frames: 5 } });
-  level.leaf.w = 10;
-  level.leaf.h = 6;
-  level.leaf.anis.offset.x = 2;
-  level.leaf.anis.offset.y = -4;
+  level.leaf.spriteSheet = level.assets.leafImg; // leafImg = keySpriteSheet.png
+  level.leaf.anis.w = 32;
+  level.leaf.anis.h = 32;
+  level.leaf.addAnis({
+    idle: { row: 0, frames: 24, frameDelay: 3 },
+  });
   level.leaf.tile = "x";
 
-  // --- fire group (spawn from 'f') ---
+  // --- fire group (tile = 'f') ---
   level.fire = new Group();
   level.fire.physics = "static";
   level.fire.spriteSheet = level.assets.fireImg;
@@ -122,19 +126,25 @@ export function buildTilesAndGroups(level) {
   // ---------------------------------------------------------------------------
   // 3) Spawn everything from the tilemap
   // ---------------------------------------------------------------------------
-
   new Tiles(tilemap, 0, 0, tileW, tileH);
 
   // ---------------------------------------------------------------------------
   // 4) Post-spawn adjustments
   // ---------------------------------------------------------------------------
 
-  // fire overlap-only
+  // Fire: overlap-only sensor
   for (const s of level.fire) {
     s.collider = "static";
     s.sensor = true;
   }
 
-  // leaves overlap-only (boars pass through)
-  for (const s of level.leaf) s.removeColliders();
+  // Keys: scale down THEN remove colliders.
+  // Scale must be set after Tiles() spawns the sprites — setting it on the
+  // group before Tiles() has no effect on the spawned sprite sizes.
+  for (const s of level.leaf) {
+    try {
+      s.scale = KEY_SCALE;
+    } catch (_) {}
+    s.removeColliders();
+  }
 }

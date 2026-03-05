@@ -1,16 +1,16 @@
 {
   "player": {
-    "frameW": 32,
-    "frameH": 32,
+    "frameW": 48,
+    "frameH": 48,
 
     "collider": {
       "w": 18,
-      "h": 12
+      "h": 30
     },
 
     "anisOffset": {
       "x": 0,
-      "y": -8
+      "y": -9
     },
 
     "move": {
@@ -23,10 +23,10 @@
     },
 
     "attack": {
-      "rangeX": 20,
-      "rangeY": 16,
-      "activeFrames": [4, 8],
-      "endFrame": 12,
+      "rangeX": 24,
+      "rangeY": 20,
+      "activeFrames": [4, 10],
+      "endFrame": 16,
       "lockToGround": true
     },
 
@@ -46,28 +46,28 @@
       },
       "run": {
         "row": 1,
-        "frames": 4,
-        "frameDelay": 3
+        "frames": 6,
+        "frameDelay": 4
       },
       "jump": {
-        "row": 2,
-        "frames": 3,
+        "row": 1,
+        "frames": 1,
         "hold": true,
         "frame": 0
       },
       "attack": {
-        "row": 3,
-        "frames": 6,
-        "frameDelay": 2
+        "row": 2,
+        "frames": 4,
+        "frameDelay": 3
       },
       "hurtPose": {
-        "row": 5,
-        "frames": 4,
+        "row": 3,
+        "frames": 2,
         "hold": true,
         "frame": 1
       },
       "death": {
-        "row": 5,
+        "row": 4,
         "frames": 4,
         "frameDelay": 16
       }
@@ -75,21 +75,21 @@
   },
 
   "boar": {
-    "frameW": 32,
-    "frameH": 32,
+    "frameW": 48,
+    "frameH": 48,
 
     "collider": {
-      "w": 18,
-      "h": 12
+      "w": 14,
+      "h": 14
     },
 
     "anisOffset": {
       "x": 0,
-      "y": -8
+      "y": 0
     },
 
     "move": {
-      "speed": 0.6
+      "speed": 0.5
     },
 
     "stats": {
@@ -109,8 +109,8 @@
     },
 
     "probes": {
-      "forward": 10,
-      "frontY": 10,
+      "forward": 12,
+      "frontY": 12,
       "headY": 0,
       "size": 4
     },
@@ -119,16 +119,16 @@
       "run": {
         "row": 1,
         "frames": 4,
-        "frameDelay": 3
+        "frameDelay": 4
       },
       "throwPose": {
-        "row": 4,
+        "row": 3,
         "frames": 1,
         "hold": true,
         "frame": 0
       },
       "death": {
-        "row": 5,
+        "row": 4,
         "frames": 4,
         "frameDelay": 16
       }

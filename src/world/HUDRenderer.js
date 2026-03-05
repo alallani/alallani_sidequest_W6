@@ -16,9 +16,14 @@ export function maybeRedrawHUD(level) {
 
   // PlayerEntity owns health; PlayerController is just the brain.
   const health = level.player?.health ?? level.playerCtrl?.player?.health ?? 0;
-  const maxHealth = level.player?.maxHealth ?? level.playerCtrl?.player?.maxHealth ?? 0;
+  const maxHealth =
+    level.player?.maxHealth ?? level.playerCtrl?.player?.maxHealth ?? 0;
 
-  if (level.score !== level._lastScore || health !== level._lastHealth || maxHealth !== level._lastMaxHealth) {
+  if (
+    level.score !== level._lastScore ||
+    health !== level._lastHealth ||
+    maxHealth !== level._lastMaxHealth
+  ) {
     redrawHUD(level);
     level._lastScore = level.score;
     level._lastHealth = health;
@@ -43,7 +48,8 @@ export function redrawHUD(level) {
 
   // Use PlayerEntity health (authoritative)
   const health = level.player?.health ?? level.playerCtrl?.player?.health ?? 0;
-  const maxHealth = level.player?.maxHealth ?? level.playerCtrl?.player?.maxHealth ?? 0;
+  const maxHealth =
+    level.player?.maxHealth ?? level.playerCtrl?.player?.maxHealth ?? 0;
 
   const drawBitmap = (str, x, y, scale = FONT_SCALE) => {
     str = String(str);
@@ -61,7 +67,17 @@ export function redrawHUD(level) {
       const sx = col * CELL;
       const sy = row * CELL;
 
-      g.image(level.assets.fontImg, Math.round(x + i * dw), Math.round(y), dw, dh, sx, sy, CELL, CELL);
+      g.image(
+        level.assets.fontImg,
+        Math.round(x + i * dw),
+        Math.round(y),
+        dw,
+        dh,
+        sx,
+        sy,
+        CELL,
+        CELL,
+      );
     }
   };
 

@@ -1,15 +1,32 @@
 // src/entities/PlayerEntity.js
 // Player entity (WORLD entity).
 //
-// Responsibilities:
-// - Own player state (health/timers/flags)
-// - Own player sprites (main sprite + ground sensor)
-// - Provide small action methods (move/jump/attack/damage)
-// - Apply animation based on current state (visual state driven by world state)
+// Camper character: single 288x240 spritesheet, 48x48 frames.
+// Row 0=idle  1=walk/run  2=attack  3=hurt  4=death
 //
-// Non-goals:
-// - Does NOT read input directly (PlayerController does)
-// - Does NOT decide game win state (Level does)
+// BUG FIXES:
+//
+// Bug 1 – Attack showed hurt frames:
+//   Root cause: buildAnis() injected `spriteSheet` into each animation def.
+//   p5play re-derives anis.w/h from a per-def spriteSheet, overriding the
+//   values we set on sprite.anis.w = 48 / sprite.anis.h = 48.
+//   With the wrong dimensions the row y-offset arithmetic shifts every
+//   animation one row down (attack row 2 → rendered at hurt row 3, etc.).
+//   Fix: set sprite.spriteSheet once globally; animation defs have NO
+//   spriteSheet key. p5play then uses our explicit anis.w/h=48 correctly.
+//
+// Bug 2 – Player disappeared when hurt:
+//   Root cause: invuln blink used divisor 4, producing a very fast toggle
+//   at high invulnTimer values (45 frames) that rendered nearly invisible.
+//   Fix: use divisor 8 for a visible, slower blink.
+//
+// Bug 3 – Death animation didn't play; player vanished:
+//   Root cause: sprite.ani.noLoop?.() is a no-op in many p5play v3 builds.
+//   Without loop suppression the death animation restarts every cycle,
+//   and the "pin to last frame" code only ran in the `else` branch —
+//   never on the first call when the animation actually starts looping.
+//   Fix: pin sprite.ani.frame = lastFrame unconditionally every draw tick
+//   while dead, regardless of deathAnimStarted. Also removed noLoop() call.
 
 export class PlayerEntity {
   constructor(pkg, assets) {
@@ -21,13 +38,11 @@ export class PlayerEntity {
     this.bounds = pkg.bounds || {};
     this.levelData = pkg.level || {};
 
-    // sprites
     this.sprite = null;
     this.sensor = null;
 
-    // spawn
     const ps = this.levelData.playerStart || {
-      x: this.tilesCfg.frameW ?? 32,
+      x: this.tilesCfg.frameW ?? 48,
       y: (this.bounds.levelH ?? 0) - (this.tilesCfg.tileH ?? 24) * 4,
     };
     this.startX = ps.x;
@@ -40,8 +55,6 @@ export class PlayerEntity {
     // state
     this.dead = false;
     this.pendingDeath = false;
-
-    // death animation latch (prevents looping forever)
     this.deathAnimStarted = false;
 
     // timers
@@ -53,7 +66,7 @@ export class PlayerEntity {
     this.attackFrameCounter = 0;
     this.attackHitThisSwing = false;
 
-    // tuning defaults
+    // tuning
     this.MOVE_SPEED = Number(this.tuning.player?.moveSpeed ?? 1.5);
     this.JUMP_STRENGTH = Number(this.tuning.player?.jumpStrength ?? 4.5);
 
@@ -63,15 +76,17 @@ export class PlayerEntity {
     this.KNOCKBACK_X = Number(this.tuning.player?.knockbackX ?? 2.0);
     this.KNOCKBACK_Y = Number(this.tuning.player?.knockbackY ?? 3.2);
 
-    this.COLLIDER_W = Number(this.tuning.player?.w ?? 18);
-    this.COLLIDER_H = Number(this.tuning.player?.h ?? 12);
+    // Collider smaller than 48x48 visual
+    this.COLLIDER_W = Number(this.tuning.player?.colliderW ?? 18);
+    this.COLLIDER_H = Number(this.tuning.player?.colliderH ?? 30);
 
-    this.ANI_OFFSET_Y = Number(this.tuning.player?.aniOffsetY ?? -8);
+    // Shift visual up so feet sit at collider bottom
+    this.ANI_OFFSET_Y = Number(this.tuning.player?.aniOffsetY ?? -9);
 
-    // attack window
+    // Attack window (controller frames)
     this.ATTACK_START = Number(this.tuning.player?.attackStartFrame ?? 4);
-    this.ATTACK_END = Number(this.tuning.player?.attackEndFrame ?? 8);
-    this.ATTACK_FINISH = Number(this.tuning.player?.attackFinishFrame ?? 12);
+    this.ATTACK_END = Number(this.tuning.player?.attackEndFrame ?? 10);
+    this.ATTACK_FINISH = Number(this.tuning.player?.attackFinishFrame ?? 16);
   }
 
   // -----------------------
@@ -106,7 +121,8 @@ export class PlayerEntity {
   // build / reset
   // -----------------------
   buildSprites() {
-    const { frameW = 32, frameH = 32 } = this.tilesCfg;
+    const frameW = 48;
+    const frameH = 48;
 
     this.sprite = new Sprite(this.startX, this.startY, frameW, frameH);
     this.sprite.rotationLock = true;
@@ -114,25 +130,30 @@ export class PlayerEntity {
     const anis = this.assets?.playerAnis;
     const img = this.assets?.playerImg;
 
+    // BUG FIX 1: Set spriteSheet globally FIRST, THEN configure anis dimensions,
+    // THEN addAnis. Never put spriteSheet inside individual animation defs —
+    // that causes p5play to re-derive anis.w/h from the image, breaking rows.
     if (img) this.sprite.spriteSheet = img;
 
     if (anis && typeof anis === "object") {
+      // These must be set AFTER assigning spriteSheet and BEFORE addAnis.
       this.sprite.anis.w = frameW;
       this.sprite.anis.h = frameH;
       this.sprite.anis.offset.y = this.ANI_OFFSET_Y;
+
       this.sprite.addAnis(anis);
       this._setAni("idle");
     } else {
       this.sprite.img = img;
     }
 
-    // collider
+    // Physics collider
     this.sprite.w = this.COLLIDER_W;
     this.sprite.h = this.COLLIDER_H;
     this.sprite.friction = 0;
     this.sprite.bounciness = 0;
 
-    // ground sensor (query-only)
+    // Ground sensor
     this.sensor = new Sprite();
     this.sensor.x = this.sprite.x;
     this.sensor.y = this.sprite.y + this.sprite.h / 2;
@@ -178,8 +199,6 @@ export class PlayerEntity {
   isGrounded(solids) {
     const s = this.sensor;
     if (!s) return false;
-
-    // Allow either { ground, platformsL, ... } OR an array [ground, platformsL, ...]
     const list = Array.isArray(solids) ? solids : Object.values(solids || {});
     for (const g of list) {
       if (g && s.overlapping(g)) return true;
@@ -196,24 +215,21 @@ export class PlayerEntity {
   }
 
   // -----------------------
-  // actions (mutations)
+  // actions
   // -----------------------
   stopX() {
     this.sprite.vel.x = 0;
   }
-
   moveLeft() {
     this.sprite.vel.x = -this.MOVE_SPEED;
     this.sprite.mirror.x = true;
   }
-
   moveRight() {
     this.sprite.vel.x = this.MOVE_SPEED;
     this.sprite.mirror.x = false;
   }
-
   jump() {
-    this.sprite.vel.y = -1 * this.JUMP_STRENGTH;
+    this.sprite.vel.y = -this.JUMP_STRENGTH;
   }
 
   startAttack() {
@@ -238,43 +254,46 @@ export class PlayerEntity {
   // animation (visual state)
   // -----------------------
   applyAnimation({ grounded, won }) {
-    if (!this.sprite?.anis || Object.keys(this.sprite.anis).length === 0) return;
+    if (!this.sprite?.anis || Object.keys(this.sprite.anis).length === 0)
+      return;
 
-    // ---- DEAD: play once, then hold last frame (prevents infinite loop)
+    // ---- DEAD ----
+    // BUG FIX 3: Pin to last frame unconditionally every tick.
+    // noLoop() is unreliable across p5play builds — without it the animation
+    // loops back to frame 0 every cycle, causing a flicker-then-vanish effect.
+    // By forcing frame = lastFrame every draw call we guarantee it holds.
     if (this.dead) {
+      const def = this.assets?.playerAnis?.death;
+      const lastFrame = Math.max(0, Number(def?.frames ?? 4) - 1);
+
       if (!this.deathAnimStarted) {
         this.deathAnimStarted = true;
-        this._playAni("death", 0);
-        // If available, disable looping
-        this.sprite.ani?.noLoop?.();
-      } else {
+        // Switch to death row and immediately clamp to last frame.
+        // We don't call playAni/play() to avoid triggering the animation loop.
         this._setAni("death");
-
-        // Hard clamp to last frame (works even if noLoop doesn't exist)
-        const def = this.assets?.playerAnis?.death;
-        const frames = Number(def?.frames ?? 1);
-        if (this.sprite.ani) this.sprite.ani.frame = Math.max(0, frames - 1);
       }
+
+      // Always pin — this is the key fix.
+      if (this.sprite.ani) this.sprite.ani.frame = lastFrame;
       return;
     }
 
     if (won) {
-      // optional: choose idle when winning
       this._setAni("idle");
       return;
     }
 
     if (this.knockTimer > 0 || this.pendingDeath) {
-      this._setAniFrame("hurtPose", 1);
+      // Show hurt row, hold on frame 0 (first hurt frame is clearly readable)
+      this._setAniFrame("hurtPose", 0);
       return;
     }
 
-    // attack animation is started by startAttack(); don't stomp it here
+    // Attack animation started by startAttack() — don't override it here
     if (this.attacking) return;
 
     if (!grounded) {
-      const f = this.sprite.vel.y < 0 ? 0 : 1;
-      this._setAniFrame("jump", f);
+      this._setAniFrame("jump", 0);
       return;
     }
 
@@ -298,7 +317,6 @@ export class PlayerEntity {
     this.sprite.vel.x = dir * this.KNOCKBACK_X;
     this.sprite.vel.y = -this.KNOCKBACK_Y;
 
-    // cancel attack
     this.attacking = false;
     this.attackFrameCounter = 0;
     this.attackHitThisSwing = false;
@@ -310,7 +328,11 @@ export class PlayerEntity {
     if (!this.sprite) return;
 
     if (!this.dead && this.invulnTimer > 0) {
-      this.sprite.tint = Math.floor(this.invulnTimer / 4) % 2 === 0 ? "#ff5050" : "#ffffff";
+      // BUG FIX 2: Divisor 8 (was 4) gives a slower, clearly visible blink.
+      // At invulnFrames=45, divisor 4 toggled ~11 times/sec — nearly invisible.
+      // Divisor 8 gives ~5-6 blinks total over the invuln window, clearly readable.
+      this.sprite.tint =
+        Math.floor(this.invulnTimer / 8) % 2 === 0 ? "#ff8080" : "#ffffff";
     } else {
       this.sprite.tint = "#ffffff";
     }
