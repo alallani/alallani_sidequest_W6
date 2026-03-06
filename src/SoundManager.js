@@ -30,15 +30,20 @@ export class SoundManager {
 
   loop(name) {
     const sound = this.sfx[name];
-    if (sound && sound.isLoaded && typeof sound.loop === "function") {
+    if (sound && typeof sound.loop === "function") {
       sound.loop();
     }
   }
 
   stop(name) {
     const sound = this.sfx[name];
-    if (sound) {
+    if (sound && typeof sound.stop === "function") {
       sound.stop();
     }
+  }
+
+  isPlaying(name) {
+    const sound = this.sfx[name];
+    return sound && typeof sound.isPlaying === "function" && sound.isPlaying();
   }
 }

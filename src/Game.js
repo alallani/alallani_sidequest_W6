@@ -34,6 +34,7 @@ export class Game {
     this.input = opts.inputManager || null;
     this.sound = opts.soundManager || null;
     this.debug = opts.debugOverlay || null;
+    this.flagPopup = opts.flagPopup || null;
 
     // highscores (SYSTEM)
     this.highScores = opts.highScores || new HighScoreManager();
@@ -68,7 +69,10 @@ export class Game {
   }
 
   build() {
-    this.level = new Level(this.pkg, this.assets, { hudGfx: this.hudGfx, events: this.events });
+    this.level = new Level(this.pkg, this.assets, {
+      hudGfx: this.hudGfx,
+      events: this.events,
+    });
     this.level.build();
 
     // init leaderboard snapshot
@@ -175,13 +179,27 @@ export class Game {
     // SYSTEM listeners (sound/debug)
     // -----------------------
     if (this.sound) {
-      this._unsubs.push(this.events.on("player:jumped", () => this.sound.play("jump")));
-      this._unsubs.push(this.events.on("player:attacked", () => this.sound.play("hit")));
-      this._unsubs.push(this.events.on("leaf:collected", () => this.sound.play("leaf")));
-      this._unsubs.push(this.events.on("player:damaged", () => this.sound.play("hurt")));
-      this._unsubs.push(this.events.on("player:died", () => this.sound.play("hurt")));
-      this._unsubs.push(this.events.on("level:won", () => this.sound.play("leaf")));
-      this._unsubs.push(this.events.on("boar:damaged", () => this.sound.play("hit")));
+      this._unsubs.push(
+        this.events.on("player:jumped", () => this.sound.play("jump")),
+      );
+      this._unsubs.push(
+        this.events.on("player:attacked", () => this.sound.play("hit")),
+      );
+      this._unsubs.push(
+        this.events.on("leaf:collected", () => this.sound.play("leaf")),
+      );
+      this._unsubs.push(
+        this.events.on("player:damaged", () => this.sound.play("hurt")),
+      );
+      this._unsubs.push(
+        this.events.on("player:died", () => this.sound.play("hurt")),
+      );
+      this._unsubs.push(
+        this.events.on("level:won", () => this.sound.play("leaf")),
+      );
+      this._unsubs.push(
+        this.events.on("boar:damaged", () => this.sound.play("hit")),
+      );
     }
 
     if (this.debug) {
@@ -208,6 +226,14 @@ export class Game {
 
     if (inputSnap?.debugTogglePressed && this.debug) {
       this.debug.toggle();
+    }
+
+    // Disable player controls when popup is active (only buttons work)
+    if (this.flagPopup?.active) {
+      inputSnap.left = false;
+      inputSnap.right = false;
+      inputSnap.jumpPressed = false;
+      inputSnap.attackPressed = false;
     }
 
     // Always advance WORLD (keeps physics + animation normal).
@@ -243,7 +269,8 @@ export class Game {
       // - Up/Down to change letter
       // - Attack (Space) to confirm (or Jump)
       if (inputSnap?.left) this._nameCursor = Math.max(0, this._nameCursor - 1);
-      if (inputSnap?.right) this._nameCursor = Math.min(2, this._nameCursor + 1);
+      if (inputSnap?.right)
+        this._nameCursor = Math.min(2, this._nameCursor + 1);
 
       if (inputSnap?.jumpPressed) this._cycleNameChar(-1);
       if (inputSnap?.attackPressed) this._cycleNameChar(+1);
@@ -271,7 +298,10 @@ export class Game {
     const cur = this.nameEntry[idx] ?? "A";
     const at = Math.max(0, chars.indexOf(cur));
     const next = (at + dir + chars.length) % chars.length;
-    this.nameEntry = this.nameEntry.substring(0, idx) + chars[next] + this.nameEntry.substring(idx + 1);
+    this.nameEntry =
+      this.nameEntry.substring(0, idx) +
+      chars[next] +
+      this.nameEntry.substring(idx + 1);
   }
 
   _commitNameEntry() {
@@ -284,6 +314,10 @@ export class Game {
       this.topScores = this.highScores.getTop?.(5) ?? this.topScores;
     }
     this.awaitingName = false;
+  }
+
+  restart() {
+    this.level.restart();
   }
 
   draw({ drawHudFn } = {}) {

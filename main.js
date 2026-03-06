@@ -65,18 +65,24 @@ function loadJSONAsync(url) {
 // Browsers block audio until a user gesture.
 // We unlock it once and never think about it again.
 let audioUnlocked = false;
+let musicStarted = false;
 function unlockAudioOnce() {
-  if (audioUnlocked) return;
-  audioUnlocked = true;
-  if (typeof userStartAudio === "function") userStartAudio();
-  
-  // Start background music once audio context is unlocked
-  if (bootDone && soundManager && !musicStarted) {
-    musicStarted = true;
-    try {
-      soundManager.loop("music");
-    } catch (err) {
-      console.warn("Background music failed to start:", err);
+  if (!audioUnlocked) {
+    audioUnlocked = true;
+    if (typeof userStartAudio === "function") userStartAudio();
+  }
+
+  // Start background music once audio is unlocked and boot is done
+  if (audioUnlocked && bootDone && soundManager && !musicStarted) {
+    const music = soundManager.sfx["music"];
+    // Check if sound is loaded (p5.Sound.isLoaded())
+    if (music && typeof music.isLoaded === "function" && music.isLoaded()) {
+      musicStarted = true;
+      try {
+        soundManager.loop("music");
+      } catch (err) {
+        console.warn("Background music failed to start:", err);
+      }
     }
   }
 }
@@ -113,7 +119,6 @@ let winScreen;
 let loseScreen;
 let flagPopup;
 let parallaxLayers = []; // Preloaded parallax layer defs [{ img, factor }, ...]
-let musicStarted = false; // Track if background music has begun playing
 
 // Make URLs absolute so they can’t accidentally resolve relative to /src/...
 const LEVELS_URL = new URL("./data/levels.json", window.location.href).href;
@@ -149,6 +154,8 @@ async function boot() {
   soundManager.load("hit", "assets/sfx/hitEnemy.wav");
   soundManager.load("leaf", "assets/sfx/leafCollect.wav");
   soundManager.load("hurt", "assets/sfx/receiveDamage.wav");
+  soundManager.load("die", "assets/sfx/receiveDamage.wav");
+  soundManager.load("win", "assets/sfx/leafCollect.wav");
   soundManager.load("music", "assets/sfx/music.wav");
 
   // --- Parallax layer defs (VIEW) ---
@@ -204,20 +211,20 @@ function initRuntime() {
   inputManager = new InputManager();
   debugOverlay = new DebugOverlay();
 
+  // UI overlays (must create before Game so we can pass flagPopup)
+  winScreen = new WinScreen(levelPkg, assets);
+  loseScreen = new LoseScreen(levelPkg, assets);
+  flagPopup = new FlagPopup(levelPkg, assets);
+
   // WORLD
   game = new Game(levelPkg, assets, {
     hudGfx,
     inputManager,
     soundManager,
     debugOverlay,
+    flagPopup,
   });
   game.build();
-
-  // UI overlays
-  winScreen = new WinScreen(levelPkg, assets);
-  loseScreen = new LoseScreen(levelPkg, assets);
-  flagPopup = new FlagPopup(levelPkg, assets);
-  flagPopup = new FlagPopup(levelPkg, assets);
 
   // VIEW: camera follow + clamp
   cameraController = new CameraController(levelPkg);
@@ -267,6 +274,11 @@ function setup() {
 function draw() {
   if (!bootDone || !levelPkg || !game) return;
 
+  // Keep trying to start music if audio is unlocked but music hasn't started yet
+  if (audioUnlocked && !musicStarted) {
+    unlockAudioOnce();
+  }
+
   const viewW = levelPkg.view.viewW;
   const viewH = levelPkg.view.viewH;
 
@@ -283,6 +295,12 @@ function draw() {
 
   // WORLD update (includes physics step)
   game.update();
+
+  // Handle popup actions
+  const popupAction = flagPopup?.getAction();
+  if (popupAction === "playAgain") {
+    game.restart();
+  }
 
   // VIEW: camera follow + clamp (after update so player position is current)
   cameraController?.update({

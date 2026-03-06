@@ -162,14 +162,15 @@ export function buildTilesAndGroups(level) {
   level.flag = new Group();
   level.flag.physics = "static";
   level.flag.spriteSheet = level.assets.flagImg;
-  level.flag.anis.w = 30;
-  level.flag.anis.h = 30;
+  level.flag.anis.w = 40;
+  level.flag.anis.h = 40;
   level.flag.addAnis({
-    idle: { row: 0, frames: 5, frameDelay: 10 },
+    idle: { row: 0, frames: 1, frameDelay: Infinity },
+    wave: { row: 0, frames: 3, frameDelay: 16 },
   });
   level.flag.tile = "!";
-  level.flag.w = 30;
-  level.flag.h = 30;
+  level.flag.w = 40;
+  level.flag.h = 40;
 
   // ---------------------------------------------------------------------------
   // 3) Spawn everything from the tilemap
@@ -186,10 +187,12 @@ export function buildTilesAndGroups(level) {
     s.sensor = true;
   }
 
-  // Flag: overlap-only sensor
+  // Flag: overlap-only sensor, start with idle animation
   for (const s of level.flag) {
     s.collider = "static";
     s.sensor = true;
+    s.changeAni("idle");
+    s.y += 3; // Adjust flag position
   }
 
   // Keys: scale down THEN remove colliders.

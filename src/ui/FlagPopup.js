@@ -26,6 +26,7 @@ export class FlagPopup {
 
     this.active = false;
     this.hasAllKeys = false;
+    this.lastAction = null; // 'playAgain' or 'continueExploring'
   }
 
   show(hasAllKeys = false) {
@@ -53,7 +54,7 @@ export class FlagPopup {
       rect(0, 0, width, height);
 
       // Popup box
-      const popupW = 200;
+      const popupW = 210;
       const popupH = 140;
       const popupX = (width - popupW) / 2;
       const popupY = (height - popupH) / 2;
@@ -65,7 +66,7 @@ export class FlagPopup {
 
       // Title (using bitmap font for consistent HUD styling)
       noStroke();
-      const title = this.hasAllKeys ? "TRAIL COMPLETE!" : "EXIT BLOCKED";
+      const title = this.hasAllKeys ? "TREASURE UNLOCKED" : "TREASURE LOCKED";
       const letterSpacing = 2;
       const totalTitleWidth =
         title.length * this.GLYPH_W + (title.length - 1) * letterSpacing;
@@ -78,13 +79,13 @@ export class FlagPopup {
       fill(255);
       textAlign(CENTER, TOP);
       const message = this.hasAllKeys
-        ? "You've gathered your first round of keys!"
+        ? "You've found $1 million worth of gold. Not a bad day's work!"
         : "You're missing keys.";
       textSize(12);
       text(message, popupX + 10, popupY + 35, popupW - 20);
 
       // Button
-      const buttonW = 100;
+      const buttonW = 140;
       const buttonH = 24;
       const buttonX = popupX + (popupW - buttonW) / 2;
       const buttonY = popupY + popupH - 35;
@@ -102,7 +103,7 @@ export class FlagPopup {
       fill(255);
       textFont("Arial", 12);
       textAlign(CENTER, CENTER);
-      const buttonText = this.hasAllKeys ? "Next Trail" : "Return to Trail";
+      const buttonText = this.hasAllKeys ? "Play Again" : "Continue Exploring";
       text(buttonText, buttonX + buttonW / 2, buttonY + buttonH / 2);
 
       pop();
@@ -180,21 +181,29 @@ export class FlagPopup {
   handleClick() {
     if (!this.active) return false;
 
-    const popupW = 200;
+    const popupW = 210;
     const popupH = 140;
     const popupX = (width - popupW) / 2;
     const popupY = (height - popupH) / 2;
 
-    const buttonW = 100;
+    const buttonW = 140;
     const buttonH = 24;
     const buttonX = popupX + (popupW - buttonW) / 2;
     const buttonY = popupY + popupH - 35;
 
     if (this._isButtonHovered(buttonX, buttonY, buttonW, buttonH)) {
+      // Record the action before hiding
+      this.lastAction = this.hasAllKeys ? "playAgain" : "continueExploring";
       this.hide();
       return true; // Button was clicked
     }
 
     return false;
+  }
+
+  getAction() {
+    const action = this.lastAction;
+    this.lastAction = null; // clear after reading
+    return action;
   }
 }

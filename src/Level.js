@@ -235,6 +235,12 @@ export class Level {
       s.removeColliders();
     }
 
+    // reset flag state
+    for (const flagSprite of this.flag) {
+      flagSprite._waveTriggered = false;
+      flagSprite.changeAni("idle");
+    }
+
     // clear and rebuild boars from cached spawns (creates a NEW Group)
     clearBoars(this);
     rebuildBoarsFromSpawns(this);
@@ -285,7 +291,16 @@ export class Level {
       p.overlaps(this.flag, (playerSprite, flagSprite) => {
         const hasAllKeys = this.score >= this.WIN_SCORE;
         if (hasAllKeys) {
-          this.events?.emit("flag:touchedWithAllKeys", { score: this.score });
+          // Play wave animation once, then stay on last frame
+          if (!flagSprite._waveTriggered) {
+            flagSprite._waveTriggered = true;
+            flagSprite.changeAni("wave");
+            flagSprite.ani.looping = false;
+            // Delay popup until animation completes (3 frames * 16 frameDelay / 60fps ≈ 800ms)
+            setTimeout(() => {
+              this.events?.emit("flag:touchedWithAllKeys", { score: this.score });
+            }, 800);
+          }
         } else {
           this.events?.emit("flag:touchedMissingKeys", {
             score: this.score,
