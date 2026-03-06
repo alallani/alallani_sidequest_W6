@@ -69,6 +69,16 @@ function unlockAudioOnce() {
   if (audioUnlocked) return;
   audioUnlocked = true;
   if (typeof userStartAudio === "function") userStartAudio();
+  
+  // Start background music once audio context is unlocked
+  if (bootDone && soundManager && !musicStarted) {
+    musicStarted = true;
+    try {
+      soundManager.loop("music");
+    } catch (err) {
+      console.warn("Background music failed to start:", err);
+    }
+  }
 }
 
 // Prevent the browser from stealing keys (space/arrows) for scrolling.
@@ -103,6 +113,7 @@ let winScreen;
 let loseScreen;
 let flagPopup;
 let parallaxLayers = []; // Preloaded parallax layer defs [{ img, factor }, ...]
+let musicStarted = false; // Track if background music has begun playing
 
 // Make URLs absolute so they can’t accidentally resolve relative to /src/...
 const LEVELS_URL = new URL("./data/levels.json", window.location.href).href;
@@ -134,6 +145,11 @@ async function boot() {
   // --- Audio registry ---
   // (AudioContext may still be locked until the user clicks/presses a key.)
   soundManager = new SoundManager();
+  soundManager.load("jump", "assets/sfx/jump.wav");
+  soundManager.load("hit", "assets/sfx/hitEnemy.wav");
+  soundManager.load("leaf", "assets/sfx/leafCollect.wav");
+  soundManager.load("hurt", "assets/sfx/receiveDamage.wav");
+  soundManager.load("music", "assets/sfx/music.wav");
 
   // --- Parallax layer defs (VIEW) ---
   const defs = levelPkg.level?.view?.parallax ?? [];

@@ -73,8 +73,8 @@ export function buildTilesAndGroups(level) {
   level.fire.addAnis({
     burn: { w: 41, h: 32, row: 0, frames: 4, frameDelay: 8 },
   });
-  level.fire.w = 18;
-  level.fire.h = 16;
+  level.fire.w = 20;
+  level.fire.h = 23;
   level.fire.tile = "f";
 
   // --- ground tile (g) ---

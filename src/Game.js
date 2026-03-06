@@ -79,6 +79,7 @@ export class Game {
     this.bestMs = this.highScores.getBestTime?.(levelId) ?? null;
 
     this._wireEventListeners();
+
     return this;
   }
 
@@ -174,10 +175,12 @@ export class Game {
     // SYSTEM listeners (sound/debug)
     // -----------------------
     if (this.sound) {
+      this._unsubs.push(this.events.on("player:jumped", () => this.sound.play("jump")));
+      this._unsubs.push(this.events.on("player:attacked", () => this.sound.play("hit")));
       this._unsubs.push(this.events.on("leaf:collected", () => this.sound.play("leaf")));
       this._unsubs.push(this.events.on("player:damaged", () => this.sound.play("hurt")));
-      this._unsubs.push(this.events.on("player:died", () => this.sound.play("die")));
-      this._unsubs.push(this.events.on("level:won", () => this.sound.play("win")));
+      this._unsubs.push(this.events.on("player:died", () => this.sound.play("hurt")));
+      this._unsubs.push(this.events.on("level:won", () => this.sound.play("leaf")));
       this._unsubs.push(this.events.on("boar:damaged", () => this.sound.play("hit")));
     }
 
@@ -308,6 +311,14 @@ export class Game {
     this._blink = 0;
 
     this.level.restart();
+
+    // Restart background music from the beginning
+    try {
+      this.sound?.stop("music");
+      this.sound?.loop("music");
+    } catch (err) {
+      console.warn("Background music restart failed:", err);
+    }
 
     // refresh leaderboard snapshot
     this.topScores = this.highScores.getTop?.(5) ?? this.topScores;

@@ -20,6 +20,12 @@ export function buildBoarGroup(level) {
   const frameW = 48;
   const frameH = 48;
 
+  // Clear old group if it exists
+  if (level.boar) {
+    clearBoars(level);
+    level.boar.removeAll();
+  }
+
   level.boar = new Group();
   level.boar.physics = "dynamic";
   level.boar.tile = "b";

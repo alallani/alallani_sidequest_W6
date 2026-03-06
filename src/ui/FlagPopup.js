@@ -67,7 +67,8 @@ export class FlagPopup {
       noStroke();
       const title = this.hasAllKeys ? "TRAIL COMPLETE!" : "EXIT BLOCKED";
       const letterSpacing = 2;
-      const totalTitleWidth = title.length * this.GLYPH_W + (title.length - 1) * letterSpacing;
+      const totalTitleWidth =
+        title.length * this.GLYPH_W + (title.length - 1) * letterSpacing;
       const titleX = popupX + popupW / 2 - totalTitleWidth / 2;
       const titleY = popupY + 10;
       const titleColor = this.hasAllKeys ? "#00ff00" : "#ff0000";
