@@ -22,7 +22,7 @@ export async function loadAssets(levelPkg, tuningDoc) {
   const leafImg = await loadImageAsync("assets/keySpriteSheet.png");
 
   // ---- Hazard ----
-  const fireImg = await loadImageAsync("assets/fireSpriteSheet.png");
+  const fireImg = await loadImageAsync("assets/plantSpriteSheet2.png");
 
   // ---- Tiles ----
   const groundTileImg = await loadImageAsync("assets/groundTile.png");
@@ -31,6 +31,11 @@ export async function loadAssets(levelPkg, tuningDoc) {
   const platformRCImg = await loadImageAsync("assets/platformRC.png");
   const wallLImg = await loadImageAsync("assets/wallL.png");
   const wallRImg = await loadImageAsync("assets/wallR.png");
+  const tileCornerBRImg = await loadImageAsync("assets/tileCornerBR.png");
+  const tileCornerBLImg = await loadImageAsync("assets/tileCornerBL.png");
+  const tileCornerTRImg = await loadImageAsync("assets/tileCornerTR.png");
+  const tileCornerTLImg = await loadImageAsync("assets/tileCornerTL.png");
+  const flagImg = await loadImageAsync("assets/flagSpriteSheet.png");
 
   // ---- UI ----
   const fontImg = await loadImageAsync("assets/bitmapFont.png");
@@ -66,6 +71,11 @@ export async function loadAssets(levelPkg, tuningDoc) {
     platformRCImg,
     wallLImg,
     wallRImg,
+    tileCornerBRImg,
+    tileCornerBLImg,
+    tileCornerTRImg,
+    tileCornerTLImg,
+    flagImg,
     fontImg,
     backgrounds,
   });
@@ -82,6 +92,11 @@ export async function loadAssets(levelPkg, tuningDoc) {
     platformRCImg,
     wallLImg,
     wallRImg,
+    tileCornerBRImg,
+    tileCornerBLImg,
+    tileCornerTRImg,
+    tileCornerTLImg,
+    flagImg,
 
     fontImg,
     backgrounds,

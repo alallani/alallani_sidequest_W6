@@ -13,24 +13,24 @@
       },
 
       "tilemap": [
-        "                    g   g   b  x        ",
-        "                b x         LggR        ",
-        "      x   f     LggR                    ",
-        "     LR   LgR          LR               ",
-        "   fx  b        x   b                   ",
-        "   LgggR   x   LR   LgR x   b  xf       ",
-        "         LgR  b x       g   LggggR      ",
-        " fx           LgR                    fx ",
-        " LgR      b                         LggR",
-        "         LgR        f x    LR  LgR  [dd]",
-        "   x     [d]      x LggR   x    ff  [dd]",
-        "LgggRffLggggggRfffLgggg]fffgfLgggggggggg",
-        "dddddddddddddddddddddddddddddddddddddddd"
+        "                 x          ",
+        "             x b LR         ",
+        "            LggR      x f   ",
+        "          Lg4dd]     LggR   ",
+        "                   x        ",
+        "   x f            LR        ",
+        "   LgggR                    ",
+        "             bxLR     xf    ",
+        "            Lgg43gR   LR    ",
+        "     x  b x [ddddd3R        ",
+        "        LgRf[dddddd]   x    ",
+        "LggRffLg4d3g4dddddd3ggggR  !",
+        "dddddddddddddddddddddddddddd"
       ],
 
       "rules": {},
 
-      "winScore": 15,
+      "winScore": 10,
       "gravity": 10,
       "fallResetMarginTiles": 3,
 

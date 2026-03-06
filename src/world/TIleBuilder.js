@@ -70,7 +70,9 @@ export function buildTilesAndGroups(level) {
   level.fire = new Group();
   level.fire.physics = "static";
   level.fire.spriteSheet = level.assets.fireImg;
-  level.fire.addAnis({ burn: { w: 32, h: 32, row: 0, frames: 16 } });
+  level.fire.addAnis({
+    burn: { w: 41, h: 32, row: 0, frames: 4, frameDelay: 8 },
+  });
   level.fire.w = 18;
   level.fire.h = 16;
   level.fire.tile = "f";
@@ -123,6 +125,52 @@ export function buildTilesAndGroups(level) {
   level.wallsR.h = tileH;
   level.wallsR.tile = "]";
 
+  // --- corner tiles ---
+  // '1' = bottom-right corner
+  level.cornerBR = new Group();
+  level.cornerBR.physics = "static";
+  level.cornerBR.img = level.assets.tileCornerBRImg;
+  level.cornerBR.w = tileW;
+  level.cornerBR.h = tileH;
+  level.cornerBR.tile = "1";
+
+  // '2' = bottom-left corner
+  level.cornerBL = new Group();
+  level.cornerBL.physics = "static";
+  level.cornerBL.img = level.assets.tileCornerBLImg;
+  level.cornerBL.w = tileW;
+  level.cornerBL.h = tileH;
+  level.cornerBL.tile = "2";
+
+  // '3' = top-right corner
+  level.cornerTR = new Group();
+  level.cornerTR.physics = "static";
+  level.cornerTR.img = level.assets.tileCornerTRImg;
+  level.cornerTR.w = tileW;
+  level.cornerTR.h = tileH;
+  level.cornerTR.tile = "3";
+
+  // '4' = top-left corner
+  level.cornerTL = new Group();
+  level.cornerTL.physics = "static";
+  level.cornerTL.img = level.assets.tileCornerTLImg;
+  level.cornerTL.w = tileW;
+  level.cornerTL.h = tileH;
+  level.cornerTL.tile = "4";
+
+  // --- flag ('!') ---
+  level.flag = new Group();
+  level.flag.physics = "static";
+  level.flag.spriteSheet = level.assets.flagImg;
+  level.flag.anis.w = 30;
+  level.flag.anis.h = 30;
+  level.flag.addAnis({
+    idle: { row: 0, frames: 5, frameDelay: 10 },
+  });
+  level.flag.tile = "!";
+  level.flag.w = 30;
+  level.flag.h = 30;
+
   // ---------------------------------------------------------------------------
   // 3) Spawn everything from the tilemap
   // ---------------------------------------------------------------------------
@@ -134,6 +182,12 @@ export function buildTilesAndGroups(level) {
 
   // Fire: overlap-only sensor
   for (const s of level.fire) {
+    s.collider = "static";
+    s.sensor = true;
+  }
+
+  // Flag: overlap-only sensor
+  for (const s of level.flag) {
     s.collider = "static";
     s.sensor = true;
   }

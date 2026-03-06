@@ -4,15 +4,17 @@
 // Scorpion sheet: scorpionSpriteSheet.png — 192x240, 48x48 frames, 4 cols x 5 rows.
 //   row 0=idle  row 1=walk  row 2=attack  row 3=hurt  row 4=death
 //
-// SIZE: The original 48x48 sheet is used as-is. Visual size is reduced by
-//   setting sprite.scale = SCORPION_SCALE (0.5) so the scorpion renders at
-//   ~24px — clearly smaller than the 48px camper — without any image resizing.
-//   The physics collider is sized independently and is unaffected by scale.
+// ALIGNMENT FIX: Every row has 0px of empty space at the bottom of the frame
+// (content sits flush against the bottom edge). This means p5play's centered
+// rendering places the scorpion visually below its collider, sinking into tiles.
+// Fix: anis.offset.y = -16 (source pixels) shifts the visual upward by ~8px
+// on screen (after scale=0.5), aligning the feet with the collider bottom.
 //
 // IMPORTANT: spriteSheet set globally (group/sprite), NOT per animation def.
-//   Order: spriteSheet → anis.w/h → addAnis.
+//   Order: spriteSheet → anis.w/h + anis.offset.y → addAnis.
 
-const SCORPION_SCALE = 0.5; // renders 48px frame at ~24px visually
+const SCORPION_SCALE = 0.5; // 48px frame renders at ~24px
+const SCORPION_OFFSET_Y = -16; // source px upward shift to sit on top of tiles
 
 export function buildBoarGroup(level) {
   const frameW = 48;
@@ -28,7 +30,7 @@ export function buildBoarGroup(level) {
 
   if (hasDefs) {
     safeAssignSpriteSheet(level.boar, level.assets.boarImg);
-    safeConfigureAniSheet(level.boar, frameW, frameH, 0);
+    safeConfigureAniSheet(level.boar, frameW, frameH, SCORPION_OFFSET_Y);
     try {
       level.boar.addAnis(level.assets.boarAnis);
     } catch (err) {
@@ -50,7 +52,7 @@ function ensureBoarAnis(level, e) {
   if (hasRun && hasDeath && hasThrow) return;
 
   safeAssignSpriteSheet(e, level.assets.boarImg);
-  safeConfigureAniSheet(e, 48, 48, 0);
+  safeConfigureAniSheet(e, 48, 48, SCORPION_OFFSET_Y);
   try {
     e.addAnis(defs);
   } catch (err) {
@@ -114,8 +116,6 @@ function safeConfigureAniSheet(target, frameW, frameH, offsetY) {
   } catch (_) {}
 }
 
-// Apply visual scale to a scorpion sprite.
-// sprite.scale shrinks the rendered image without touching the physics collider.
 function applyScale(e) {
   try {
     e.scale = SCORPION_SCALE;
@@ -134,6 +134,10 @@ export function hookBoarSolids(level) {
   if (level.platformsR) level.boar.collides(level.platformsR);
   if (level.wallsL) level.boar.collides(level.wallsL);
   if (level.wallsR) level.boar.collides(level.wallsR);
+  if (level.cornerBR) level.boar.collides(level.cornerBR);
+  if (level.cornerBL) level.boar.collides(level.cornerBL);
+  if (level.cornerTR) level.boar.collides(level.cornerTR);
+  if (level.cornerTL) level.boar.collides(level.cornerTL);
 }
 
 export function cacheBoarSpawns(level) {
@@ -168,7 +172,7 @@ export function rebuildBoarsFromSpawns(level) {
       level.assets?.boarAnis && typeof level.assets.boarAnis === "object";
     if (hasDefs) {
       safeAssignSpriteSheet(e, level.assets.boarImg);
-      safeConfigureAniSheet(e, 48, 48, 0);
+      safeConfigureAniSheet(e, 48, 48, SCORPION_OFFSET_Y);
       try {
         e.addAnis(level.assets.boarAnis);
       } catch (_) {
@@ -250,7 +254,7 @@ export function updateBoars(level) {
 
       if (hasAnis) {
         safeAssignSpriteSheet(e, level.assets.boarImg);
-        safeConfigureAniSheet(e, 48, 48, 0);
+        safeConfigureAniSheet(e, 48, 48, SCORPION_OFFSET_Y);
         try {
           if (!e.anis || !e.anis.run) e.addAnis(level.assets.boarAnis);
         } catch (_) {}
@@ -259,7 +263,6 @@ export function updateBoars(level) {
         e.img = level.assets.boarImg;
       }
 
-      // KEY: apply visual scale after animations are configured
       applyScale(e);
 
       attachBoarProbes(level, e);
@@ -339,7 +342,6 @@ export function updateBoars(level) {
       e.deathFrameTimer += deltaTime;
       const f = Math.floor(e.deathFrameTimer / msPerFrame);
 
-      // Pin to last frame (noLoop unreliable across p5play builds)
       if (e.ani) e.ani.frame = Math.min(frames - 1, f);
 
       if (f >= frames - 1) {

@@ -1,16 +1,16 @@
 {
   "player": {
-    "frameW": 32,
-    "frameH": 32,
+    "frameW": 48,
+    "frameH": 48,
 
     "collider": {
-      "w": 12,
-      "h": 20
+      "w": 18,
+      "h": 30
     },
 
     "anisOffset": {
       "x": 0,
-      "y": -6
+      "y": -9
     },
 
     "move": {
@@ -85,7 +85,7 @@
 
     "anisOffset": {
       "x": 0,
-      "y": 0
+      "y": -16
     },
 
     "move": {
@@ -109,8 +109,8 @@
     },
 
     "probes": {
-      "forward": 12,
-      "frontY": 12,
+      "forward": 10,
+      "frontY": 8,
       "headY": 0,
       "size": 4
     },

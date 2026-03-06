@@ -37,7 +37,10 @@ import { LevelLoader } from "./src/LevelLoader.js";
 import { Game } from "./src/Game.js";
 import { ParallaxBackground } from "./src/ParallaxBackground.js";
 import { loadAssets } from "./src/AssetLoader.js";
-import { applyIntegerScale, installResizeHandler } from "./src/utils/IntegerScale.js";
+import {
+  applyIntegerScale,
+  installResizeHandler,
+} from "./src/utils/IntegerScale.js";
 
 import { CameraController } from "./src/CameraController.js";
 import { InputManager } from "./src/InputManager.js";
@@ -46,6 +49,7 @@ import { DebugOverlay } from "./src/DebugOverlay.js";
 
 import { WinScreen } from "./src/ui/WinScreen.js";
 import { LoseScreen } from "./src/ui/LoseScreen.js";
+import { FlagPopup } from "./src/ui/FlagPopup.js";
 
 // ------------------------------------------------------------
 // Helpers
@@ -97,6 +101,7 @@ let debugOverlay; // VIEW/SYSTEM: debug UI
 
 let winScreen;
 let loseScreen;
+let flagPopup;
 let parallaxLayers = []; // Preloaded parallax layer defs [{ img, factor }, ...]
 
 // Make URLs absolute so they can’t accidentally resolve relative to /src/...
@@ -195,6 +200,8 @@ function initRuntime() {
   // UI overlays
   winScreen = new WinScreen(levelPkg, assets);
   loseScreen = new LoseScreen(levelPkg, assets);
+  flagPopup = new FlagPopup(levelPkg, assets);
+  flagPopup = new FlagPopup(levelPkg, assets);
 
   // VIEW: camera follow + clamp
   cameraController = new CameraController(levelPkg);
@@ -204,6 +211,15 @@ function initRuntime() {
   // IMPORTANT: subscribe ONCE (not in draw)
   game.events.on("level:restarted", () => {
     cameraController?.reset();
+    flagPopup?.hide();
+  });
+
+  // Wire flag popup events
+  game.events.on("flag:touchedWithAllKeys", () => {
+    flagPopup?.show(true);
+  });
+  game.events.on("flag:touchedMissingKeys", () => {
+    flagPopup?.show(false);
   });
 
   // VIEW: parallax background renderer
@@ -288,7 +304,9 @@ function draw() {
 
   // These overlay draw calls already guard camera.off/on internally,
   // but we keep them outside of any camera.off scope here.
-  if (won) winScreen?.draw({ elapsedMs, game });
+  flagPopup?.draw();
+  // Commented out: win screen no longer shown until player reaches flag
+  // if (won) winScreen?.draw({ elapsedMs, game });
   if (dead) loseScreen?.draw({ elapsedMs, game });
 }
 
@@ -298,6 +316,7 @@ function draw() {
 
 function mousePressed() {
   unlockAudioOnce();
+  flagPopup?.handleClick();
 }
 
 function keyPressed(evt) {
