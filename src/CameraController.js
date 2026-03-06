@@ -46,14 +46,20 @@ export class CameraController {
     const tileW = this.pkg.tiles?.tileW ?? 24;
     const tileH = this.pkg.tiles?.tileH ?? 24;
 
-    const tx = constrain(this.target.x, viewW / 2, levelW - viewW / 2 - tileW / 2);
-    const ty = constrain(this.target.y, viewH / 2 - tileH * 2, levelH - viewH / 2 - tileH);
+    const tx = constrain(
+      this.target.x,
+      viewW / 2,
+      levelW - viewW / 2 - tileW / 2,
+    );
+    const ty = constrain(
+      this.target.y,
+      viewH / 2 - tileH * 2,
+      levelH - viewH / 2 - tileH,
+    );
 
-    const nextX = Math.round(lerp(this.cx ?? tx, tx, this.lerp));
-    const nextY = Math.round(lerp(this.cy ?? ty, ty, this.lerp));
-
-    this.cx = nextX;
-    this.cy = nextY;
+    // Keep smooth internal state (don't round here to avoid lerp oscillation)
+    this.cx = lerp(this.cx ?? tx, tx, this.lerp);
+    this.cy = lerp(this.cy ?? ty, ty, this.lerp);
   }
 
   applyToP5Camera() {
@@ -61,7 +67,8 @@ export class CameraController {
     camera.width = this.pkg.view?.viewW ?? this.pkg.view?.w ?? 240;
     camera.height = this.pkg.view?.viewH ?? this.pkg.view?.h ?? 192;
 
-    if (this.cx !== undefined) camera.x = this.cx;
-    if (this.cy !== undefined) camera.y = this.cy;
+    // Round only when applying to camera for pixel-perfect rendering
+    if (this.cx !== undefined) camera.x = Math.round(this.cx);
+    if (this.cy !== undefined) camera.y = Math.round(this.cy);
   }
 }

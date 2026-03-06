@@ -286,9 +286,9 @@ function draw() {
   const bg = levelPkg.level?.view?.background ?? [69, 61, 79];
   background(bg[0], bg[1], bg[2]);
 
-  // Parallax uses camera.x from previous frame (fine with manual stepping)
+  // Parallax uses smooth camera position (not rounded) to avoid jitter on slow layers
   parallax?.draw({
-    cameraX: camera.x || 0,
+    cameraX: cameraController?.cx ?? camera.x ?? 0,
     viewW,
     viewH,
   });

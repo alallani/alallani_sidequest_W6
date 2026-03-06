@@ -148,9 +148,9 @@ async function loadBackgrounds(levelPkg) {
   }
 
   return {
-    bgFar: await loadImageAsync("assets/background_layer_1.png"),
-    bgMid: await loadImageAsync("assets/background_layer_2.png"),
-    bgFore: await loadImageAsync("assets/background_layer_3.png"),
+    bgFar: await loadImageAsync("assets/skyBackground1.png"),
+    bgMid: await loadImageAsync("assets/mountainsBackground2.png"),
+    bgFore: await loadImageAsync("assets/treesBackground3.png"),
   };
 }
 

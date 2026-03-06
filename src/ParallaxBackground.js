@@ -27,27 +27,41 @@ export class ParallaxBackground {
    */
   constructor(layers = []) {
     this.layers = layers;
+    // Smooth internal offset per layer to prevent jitter
+    this.smoothOffsets = layers.map(() => null);
   }
 
   draw({ cameraX, viewW, viewH }) {
     camera.off();
     drawingContext.imageSmoothingEnabled = false;
 
-    for (const layer of this.layers) {
+    for (let i = 0; i < this.layers.length; i++) {
+      const layer = this.layers[i];
       const { img, factor = 1 } = layer;
-      if (!img) continue;
+      if (!img || !img.width) continue;
 
-      const offsetX = -cameraX * factor;
+      const targetOffset = -cameraX * factor;
+
+      // Apply smoothing to prevent micro-jitter (slower layers get more smoothing)
+      const smoothFactor = 0.3 + factor * 0.5; // 0.3 to 0.8 based on layer depth
+      if (this.smoothOffsets[i] === null) {
+        this.smoothOffsets[i] = targetOffset;
+      } else {
+        this.smoothOffsets[i] +=
+          (targetOffset - this.smoothOffsets[i]) * smoothFactor;
+      }
+      const offsetX = this.smoothOffsets[i];
 
       // tile horizontally
       const imgW = img.width;
       const imgH = img.height;
 
-      // ensure enough tiles to fill width
-      const startX = Math.floor(offsetX / imgW) * imgW;
+      // Calculate smooth tiling offset (preserve fractional pixel offset within tile)
+      const tileOffset = offsetX - Math.floor(offsetX / imgW) * imgW; // 0 to imgW
+      const startX = tileOffset - imgW; // -imgW to 0
 
       for (let x = startX; x < viewW; x += imgW) {
-        image(img, Math.round(x), 0, imgW, viewH);
+        image(img, Math.floor(x), 0, imgW, viewH);
       }
     }
 
