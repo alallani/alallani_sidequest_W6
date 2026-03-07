@@ -73,7 +73,13 @@ function unlockAudioOnce() {
   }
 
   // Start background music once audio is unlocked, boot is done, AND game has started
-  if (audioUnlocked && bootDone && soundManager && !musicStarted && window.gameStarted) {
+  if (
+    audioUnlocked &&
+    bootDone &&
+    soundManager &&
+    !musicStarted &&
+    window.gameStarted
+  ) {
     const music = soundManager.sfx["music"];
     // Check if sound is loaded (p5.Sound.isLoaded())
     if (music && typeof music.isLoaded === "function" && music.isLoaded()) {

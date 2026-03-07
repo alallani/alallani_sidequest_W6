@@ -35,7 +35,7 @@ export async function loadAssets(levelPkg, tuningDoc) {
   const tileCornerBLImg = await loadImageAsync("assets/tileCornerBL.png");
   const tileCornerTRImg = await loadImageAsync("assets/tileCornerTR.png");
   const tileCornerTLImg = await loadImageAsync("assets/tileCornerTL.png");
-  const flagImg = await loadImageAsync("assets/flagSpriteSheet.png");
+  const flagImg = await loadImageAsync("assets/chestSpriteSheet.png");
 
   // ---- UI ----
   const fontImg = await loadImageAsync("assets/bitmapFont.png");

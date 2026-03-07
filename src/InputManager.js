@@ -86,7 +86,8 @@ export class InputManager {
     this._input.jumpPressed = jumpDown && !this._prevDown.jump;
     this._input.attackPressed = attackDown && !this._prevDown.attack;
     this._input.restartPressed = restartDown && !this._prevDown.restart;
-    this._input.debugTogglePressed = debugToggleDown && !this._prevDown.debugToggle;
+    this._input.debugTogglePressed =
+      debugToggleDown && !this._prevDown.debugToggle;
 
     // -----------------------
     // Store prev DOWN states

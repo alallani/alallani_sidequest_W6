@@ -64,7 +64,9 @@ canvas {
   font-family: Georgia, serif;
   cursor: pointer;
   border-radius: 4px;
-  transition: background 0.2s, transform 0.1s;
+  transition:
+    background 0.2s,
+    transform 0.1s;
 }
 
 #start-btn:hover {
