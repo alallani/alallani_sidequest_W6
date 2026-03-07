@@ -18,9 +18,22 @@
         display: block;
       }
     </style>
+    <link rel="stylesheet" href="style.css" />
   </head>
 
   <body>
+    <!-- Intro Screen Overlay -->
+    <div id="intro-screen">
+      <div class="intro-content">
+        <p style="color: white">
+          Deep in the forest lies hidden treasure, locked tight. Can you find
+          all the keys to claim it, or will sneaky scorpions and poisonous
+          plants get in your way?
+        </p>
+        <button id="start-btn">Start Exploring</button>
+      </div>
+    </div>
+
     <!--
       ============================================================
       ASSET CREDITS
@@ -61,5 +74,13 @@
 
     <!-- Entry point -->
     <script type="module" src="./main.js"></script>
+
+    <script>
+      document
+        .getElementById("start-btn")
+        .addEventListener("click", function () {
+          document.getElementById("intro-screen").classList.add("hidden");
+        });
+    </script>
   </body>
 </html>
