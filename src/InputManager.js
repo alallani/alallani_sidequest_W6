@@ -39,6 +39,17 @@ export class InputManager {
   }
 
   update() {
+    // If game hasn't started yet (intro screen visible), return neutral input
+    if (!window.gameStarted) {
+      this._input.left = false;
+      this._input.right = false;
+      this._input.jumpPressed = false;
+      this._input.attackPressed = false;
+      this._input.restartPressed = false;
+      this._input.debugTogglePressed = false;
+      return this._input;
+    }
+
     // If kb isn't ready yet (rare during boot), keep a safe "all false" snapshot.
     if (typeof kb === "undefined" || !kb) {
       this._input.left = false;

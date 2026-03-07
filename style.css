@@ -44,6 +44,17 @@ canvas {
   margin-bottom: 2rem;
 }
 
+.controls-info {
+  margin-bottom: 2rem;
+}
+
+.controls-info p {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-family: Georgia, serif;
+  font-size: 1.3rem;
+  margin: 0.5rem 0;
+}
+
 #start-btn {
   background: #4a7c59;
   color: #fff;

@@ -30,6 +30,10 @@
           all the keys to claim it, or will sneaky scorpions and poisonous
           plants get in your way?
         </p>
+        <div class="controls-info">
+          <p>WASD / Arrows to move</p>
+          <p>SPACE to attack</p>
+        </div>
         <button id="start-btn">Start Exploring</button>
       </div>
     </div>
@@ -76,10 +80,12 @@
     <script type="module" src="./main.js"></script>
 
     <script>
+      window.gameStarted = false;
       document
         .getElementById("start-btn")
         .addEventListener("click", function () {
           document.getElementById("intro-screen").classList.add("hidden");
+          window.gameStarted = true;
         });
     </script>
   </body>
